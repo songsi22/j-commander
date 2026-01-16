@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Container Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <h1>Container Manager</h1>
+            <div class="was-selector">
+                <label><input type="radio" name="was-select" value="konetic" checked> <span>KONETIC</span></label>
+                <label><input type="radio" name="was-select" value="ehtis1"> <span>EHTIS 1</span></label>
+                <label><input type="radio" name="was-select" value="ehtis2"> <span>EHTIS 2</span></label>
+                <label><input type="radio" name="was-select" value="gmi"> <span>GMI</span></label>
+            </div>
+        </div>
+        <div class="bulk-actions">
+            <button id="bulk-start" class="btn-start" onclick="performAction(this, 'start', 'BULK')" disabled>Start
+                Selected</button>
+            <button id="bulk-stop" class="btn-stop" onclick="performAction(this, 'stop', 'BULK')" disabled>Stop
+                Selected</button>
+            <button id="bulk-restart" class="btn-restart" onclick="performAction(this, 'restart', 'BULK')"
+                disabled>Restart
+                Selected</button>
+            <button onclick="fetchServers(this)" class="btn-refresh">Refresh List</button>
+        </div>
+        <div class="system-clock-container">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="clock-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="system-clock">Loading time...</span>
+        </div>
+    </header>
+
+    <main class="content-wrapper">
+        <div class="layout-container">
+            <!-- Tab Navigation -->
+            <div class="tab-box">
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="panel-servers">Server List</button>
+                    <button class="tab-btn" data-tab="panel-scheduled">Scheduled Tasks <span id="job-count-tab"
+                            class="badge-tab">0</span></button>
+                    <button class="tab-btn" data-tab="panel-history">Job History</button>
+                </div>
+            </div>
+
+            <!-- Server List Panel -->
+            <section id="panel-servers" class="panel tab-content active">
+                <div class="panel-header">
+                    <h2>Server List</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="40"><input type="checkbox" id="header-checkbox" disabled></th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="server-list">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Scheduler Panel -->
+            <section id="panel-scheduled" class="panel tab-content">
+                <div class="panel-header">
+                    <h2>Scheduled Tasks <span id="job-count" class="badge">0</span></h2>
+                    <button class="btn-primary" onclick="openJobModal()">+ Add Schedule</button>
+                </div>
+                <div class="job-list-container">
+                    <table class="job-table">
+                        <thead>
+                            <tr>
+                                <th>Actions</th>
+                                <th>Targets</th>
+                                <th>Schedule (Cron)</th>
+                                <th>Cluster Aware</th>
+                                <th>Next Run</th>
+                                <th>Control</th>
+                            </tr>
+                        </thead>
+                        <tbody id="job-list">
+                            <!-- Jobs injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Job History Panel -->
+            <section id="panel-history" class="panel tab-content">
+                <div class="panel-header">
+                    <h2>Job History</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Action</th>
+                                <th>Targets</th>
+                                <th>Status</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-list">
+                            <!-- History will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Job Creation Modal -->
+    <div id="job-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeJobModal()">&times;</span>
+            <h2>Create Scheduled Task</h2>
+            <form id="job-form">
+                <div class="form-group">
+                    <label>Action</label>
+                    <select id="job-action" required>
+                        <option value="start">Start</option>
+                        <option value="stop">Stop</option>
+                        <option value="restart" selected>Restart</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Target Servers (Select from list)</label>
+                    <div id="job-server-select" class="checkbox-group">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Schedule (Daily Maintenance Time)</label>
+                    <div class="cron-inputs">
+                        <input type="text" id="cron-hour" placeholder="Hour (0-23)" required>
+                        <input type="text" id="cron-min" placeholder="Min (0-59)" required>
+                    </div>
+                    <small>Specify the time for this one-time task to execute today.</small>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="job-cluster-aware">
+                        Enable Cluster Safety Check
+                        <span class="tooltip"
+                            title="If enabled, action proceeds ONLY if at least one other server in the cluster is RUNNING.">?</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeJobModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
