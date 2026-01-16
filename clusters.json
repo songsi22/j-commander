@@ -1,0 +1,10 @@
+{
+    "cluster1": [
+        "cl-container1",
+        "cl-container1"
+    ],
+    "cluster1_adm": [
+        "cl-container1_adm",
+        "cl-container2_adm"
+    ]
+}
