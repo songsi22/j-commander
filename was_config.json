@@ -1,0 +1,26 @@
+{
+    "server1": {
+        "ip": "192.168.0.20",
+        "port": "10000",
+        "user": "user",
+        "password": "password"
+    },
+    "server2": {
+        "ip": "192.168.0.33",
+        "port": "10000",
+        "user": "user",
+        "password": "password"
+    },
+    "server3": {
+        "ip": "192.168.0.35",
+        "port": "10000",
+        "user": "user",
+        "password": "password"
+    },
+    "server3": {
+        "ip": "192.168.0.36",
+        "port": "10000",
+        "user": "user",
+        "password": "password"
+    }
+}
